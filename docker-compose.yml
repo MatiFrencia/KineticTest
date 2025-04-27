@@ -1,0 +1,57 @@
+services:
+  inventory.api:
+    image: ${DOCKER_REGISTRY-}inventoryapi
+    build:
+      context: .
+      dockerfile: Inventory.API/Dockerfile
+    container_name: inventoryapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - RABBITMQ_HOST=rabbitmq
+      - SQLITE_DB_PATH=/data/inventory.db # Agregar ruta de la base de datos
+    depends_on:
+      - rabbitmq
+    ports:
+      - "5000:8080"
+    volumes:
+      - inventory_db:/data # Volumen persistente para la base de datos
+    networks:
+      - app_network
+    entrypoint: ["/bin/bash", "/app/migrate.sh"]
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - app_network
+
+  notification.service:
+    image: ${DOCKER_REGISTRY-}notificationservice
+    build:
+      context: .
+      dockerfile: Notification.Service/Dockerfile
+    container_name: notificationservice
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - RABBITMQ_HOST=rabbitmq
+      - SQLITE_DB_PATH=/data/notification.db # Agregar ruta de la base de datos
+    depends_on:
+      - rabbitmq
+    volumes:
+      - notification_db:/data # Volumen persistente para la base de datos
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  inventory_db: # Volumen para la base de datos de Inventory.API
+  notification_db: # Volumen para la base de datos de Notification.Service
