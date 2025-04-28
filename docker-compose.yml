@@ -14,9 +14,9 @@ services:
       - sqlserver 
     ports:
       - "5000:8080"
+      - "5001:8081"
     networks:
       - app_network
-    entrypoint: ["/bin/bash", "/app/migrate.sh"]
 
   rabbitmq:
     image: rabbitmq:management

@@ -28,9 +28,15 @@ builder.Services.AddDbContext<NotificationContext>(options =>
 var host = builder.Build();
 ServiceProviderHelper.ServiceProvider = host.Services;
 
-using (var scope = host.Services.CreateScope())
+try
 {
-    var context = scope.ServiceProvider.GetRequiredService<NotificationContext>();
-    context.Database.EnsureCreated();  // Aplica las migraciones de la base de datos
+    using (var scope = host.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<NotificationContext>();
+        context.Database.EnsureCreated();  // Aplica las migraciones de la base de datos
+    }
+}
+finally
+{
 }
 host.Run();

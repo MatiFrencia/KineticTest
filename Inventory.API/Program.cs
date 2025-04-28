@@ -25,6 +25,7 @@ builder.Host.UseSerilog();
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();  // Registrar el acceso al contexto HTTP
 
+await Task.Delay(30000);
 // Configuración de MassTransit con RabbitMQ
 builder.Services.ConfigureMassTransit();
 
@@ -34,6 +35,7 @@ builder.Services.AddScoped<IProductsService, ProductsService>();
 builder.Services.AddScoped<IProductsRepository, ProductsRepository>();
 var connString = builder.Configuration.GetConnectionString("DefaultConnection");
 Environment.SetEnvironmentVariable("SQLSERVER_CONNECTIONSTRING", connString);
+
 
 // Configurar Entity Framework Core para SQL Server
 builder.Services.AddDbContext<InventoryContext>(options =>
@@ -48,22 +50,28 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+try
 {
-    var context = scope.ServiceProvider.GetRequiredService<InventoryContext>();
-    context.Database.EnsureCreated();  // Aplica las migraciones de la base de datos
-
-    // Verificar si ya existen productos en la base de datos
-    if (!context.Products.Any())  // Asegúrate de tener la entidad "Products"
+    using (var scope = app.Services.CreateScope())
     {
-        // Crear productos por defecto
-        context.Products.AddRange(
-            new Product("Producto 1", "Descripción del producto 1", 10.99m, 100, "Categoría A"),
-            new Product("Producto 2", "Descripción del producto 2", 19.99m, 50, "Categoría B"),
-            new Product("Producto 3", "Descripción del producto 3", 5.99m, 200, "Categoría C")
-        );
-        context.SaveChanges();  // Guardar los productos en la base de datos
+        var context = scope.ServiceProvider.GetRequiredService<InventoryContext>();
+        context.Database.EnsureCreated();  // Aplica las migraciones de la base de datos
+
+        // Verificar si ya existen productos en la base de datos
+        if (!context.Products.Any())  // Asegúrate de tener la entidad "Products"
+        {
+            // Crear productos por defecto
+            context.Products.AddRange(
+                new Product("Producto 1", "Descripción del producto 1", 10.99m, 100, "Categoría A"),
+                new Product("Producto 2", "Descripción del producto 2", 19.99m, 50, "Categoría B"),
+                new Product("Producto 3", "Descripción del producto 3", 5.99m, 200, "Categoría C")
+            );
+            context.SaveChanges();  // Guardar los productos en la base de datos
+        }
     }
+}
+finally
+{
 }
 
 // Configurar el pipeline de solicitud HTTP.
