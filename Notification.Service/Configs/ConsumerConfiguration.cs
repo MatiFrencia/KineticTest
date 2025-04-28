@@ -39,9 +39,6 @@ namespace Notification.Service.Configs
                         {
                             dlq.ExchangeType = "direct";
                         });
-
-                        // Configurar reintentos automáticos para la cola
-                        e.UseMessageRetry(r => r.Immediate(3)); // 3 reintentos antes de pasar a la DLQ
                     });
 
                     cfg.ReceiveEndpoint("product_updated_queue", e =>
@@ -53,6 +50,14 @@ namespace Notification.Service.Configs
                             s.ExchangeType = "direct"; // Tipo de exchange directo
                         });
                         e.Consumer<ProductUpdatedEventHandler>();
+                        // Configuración de Dead Letter Queue (DLQ)
+                        e.UseMessageRetry(r => r.Immediate(3)); // 3 reintentos antes de pasar a la DLQ
+                        e.UseDelayedRedelivery(r => r.Intervals(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10))); // Retrasos entre los reintentos
+                                                                                                                     // Configurar Dead Letter Queue (DLQ) con MassTransit
+                        e.BindDeadLetterQueue("inventory_exchange_failed", "failed_product_updated_queue", dlq =>
+                        {
+                            dlq.ExchangeType = "direct";
+                        });
                     });
 
                     cfg.ReceiveEndpoint("product_deleted_queue", e =>
@@ -64,6 +69,14 @@ namespace Notification.Service.Configs
                             s.ExchangeType = "direct"; // Tipo de exchange directo
                         });
                         e.Consumer<ProductDeletedEventHandler>();
+                        // Configuración de Dead Letter Queue (DLQ)
+                        e.UseMessageRetry(r => r.Immediate(3)); // 3 reintentos antes de pasar a la DLQ
+                        e.UseDelayedRedelivery(r => r.Intervals(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10))); // Retrasos entre los reintentos
+                                                                                                                     // Configurar Dead Letter Queue (DLQ) con MassTransit
+                        e.BindDeadLetterQueue("inventory_exchange_failed", "failed_product_deleted_queue", dlq =>
+                        {
+                            dlq.ExchangeType = "direct";
+                        });
                     });
 
                 });

@@ -19,6 +19,7 @@ namespace Inventory.Infrastructure.Data
 #if DEBUG
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            //var connString = "Server=localhost,1434;Database=InventoryDB;User=sa;Password=MatiFrencia11;TrustServerCertificate=True;";
             var connString = Environment.GetEnvironmentVariable("SQLSERVER_CONNECTIONSTRING");
             if (string.IsNullOrEmpty(connString))
             {

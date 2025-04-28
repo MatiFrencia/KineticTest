@@ -3,6 +3,7 @@ using Notification.Service.Data;
 using Notification.Service.Models;
 using Newtonsoft.Json;
 using Serilog;
+using Microsoft.EntityFrameworkCore;
 
 namespace Notification.Service.Middleware
 {
@@ -20,6 +21,8 @@ namespace Notification.Service.Middleware
         public async Task Send(ConsumeContext<T> context, IPipe<ConsumeContext<T>> next)
         {
             var message = context.Message;
+            int retryCount = 0;
+            bool processed = false;
 
             // Crear el evento genérico para guardar en la base de datos
             var eventLog = new EventLogs
@@ -33,19 +36,66 @@ namespace Notification.Service.Middleware
 
             try
             {
-                // Guardar el evento en la base de datos
-                await _dbContext.EventLogs.AddAsync(eventLog);
-                await _dbContext.SaveChangesAsync();
+                // Llamar al siguiente middleware o handler si todo sale bien
+                await next.Send(context);
 
+                // Guardar el evento en la base de datos (para eventos procesados correctamente)
+                await _dbContext.EventLogs.AddAsync(eventLog);
+                var failedEventLog = await _dbContext.FailedEventLogs
+                    .FirstOrDefaultAsync(e => e.EventId == eventLog.EventId);
+                if (failedEventLog != null)
+                {
+                    failedEventLog.SuccessfullyHandled = true;
+                }
+                await _dbContext.SaveChangesAsync();
                 _logger.Information("Event {EventId} for {EventType} saved to database.", eventLog.EventId, eventLog.EventType);
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Error while saving event {EventId} for {EventType} to database.", eventLog.EventId, eventLog.EventType);
-            }
+                // Verificar si ya existe un evento fallido con el mismo EventId
+                var failedEventLog = await _dbContext.FailedEventLogs
+                    .FirstOrDefaultAsync(e => e.EventId == eventLog.EventId);
+                if (failedEventLog != null)
+                {
+                    if (failedEventLog.SuccessfullyHandled)
+                        return;
+                    // Si ya existe, incrementar los reintentos
+                    failedEventLog.Retries += 1;
 
-            // Llamar al siguiente middleware o handler
-            await next.Send(context);
+                    // Si el número de reintentos ha alcanzado 3, no volver a intentar más
+                    if (failedEventLog.Retries > 3)
+                    {
+                        _logger.Warning("Event {EventId} for {EventType} reached maximum retries.", failedEventLog.EventId, failedEventLog.EventType);
+                        return; // No procesamos más el evento
+                    }
+
+                    // Actualizar el evento fallido con el nuevo número de reintentos y detalles del error
+                    failedEventLog.ErrorDetails = ex.Message;
+                    _dbContext.FailedEventLogs.Update(failedEventLog);
+                }
+                else
+                {
+                    // Si no existe, crear un nuevo evento fallido
+                    var newFailedEventLog = new FailedEventLogs
+                    {
+                        EventId = eventLog.EventId,
+                        EventType = eventLog.EventType,
+                        TraceId = eventLog.TraceId,
+                        CreatedAt = DateTime.UtcNow.AddHours(-3),
+                        Payload = eventLog.Payload,
+                        Retries = 1,  // Primer reintento
+                        ErrorDetails = ex.Message // Detalle del error inicial
+                    };
+
+                    await _dbContext.FailedEventLogs.AddAsync(newFailedEventLog);
+                }
+
+                // Guardar los cambios en la base de datos
+                await _dbContext.SaveChangesAsync();
+
+                _logger.Error(ex, "Error processing event {EventId} for {EventType}, saved to FailedEventLogs.", eventLog.EventId, eventLog.EventType);
+                throw ex;
+            }
         }
 
         public void Probe(ProbeContext context)

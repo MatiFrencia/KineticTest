@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Notification.Service.Data;
 
@@ -11,9 +12,11 @@ using Notification.Service.Data;
 namespace Notification.Service.Migrations
 {
     [DbContext(typeof(NotificationContext))]
-    partial class NotificationContextModelSnapshot : ModelSnapshot
+    [Migration("20250428052849_FailedEvents")]
+    partial class FailedEvents
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -69,9 +72,6 @@ namespace Notification.Service.Migrations
 
                     b.Property<int>("Retries")
                         .HasColumnType("int");
-
-                    b.Property<bool>("SuccessfullyHandled")
-                        .HasColumnType("bit");
 
                     b.Property<string>("TraceId")
                         .IsRequired()

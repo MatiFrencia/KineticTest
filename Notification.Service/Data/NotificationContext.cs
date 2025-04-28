@@ -16,15 +16,19 @@ namespace Notification.Service.Data
         }
 
         public virtual DbSet<EventLogs> EventLogs { get; set; }
+        public virtual DbSet<FailedEventLogs> FailedEventLogs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Definir EventId como clave primaria
             modelBuilder.Entity<EventLogs>()
                 .HasKey(e => e.EventId);  // Esto hace que EventId sea la clave primaria
+            modelBuilder.Entity<FailedEventLogs>()
+    .HasKey(e => e.EventId);  // Esto hace que EventId sea la clave primaria
         }
 #if DEBUG
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            //var connString = "Server=localhost,1434;Database=NotificationDB;User=sa;Password=MatiFrencia11;TrustServerCertificate=True;";
             var connString = Environment.GetEnvironmentVariable("SQLSERVER_CONNECTIONSTRING");
             if (string.IsNullOrEmpty(connString))
             {
