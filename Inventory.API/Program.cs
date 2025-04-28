@@ -70,8 +70,26 @@ try
         }
     }
 }
-finally
+catch(Exception)
 {
+    await Task.Delay(60000);
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<InventoryContext>();
+        context.Database.EnsureCreated();  // Aplica las migraciones de la base de datos
+
+        // Verificar si ya existen productos en la base de datos
+        if (!context.Products.Any())  // Asegúrate de tener la entidad "Products"
+        {
+            // Crear productos por defecto
+            context.Products.AddRange(
+                new Product("Producto 1", "Descripción del producto 1", 10.99m, 100, "Categoría A"),
+                new Product("Producto 2", "Descripción del producto 2", 19.99m, 50, "Categoría B"),
+                new Product("Producto 3", "Descripción del producto 3", 5.99m, 200, "Categoría C")
+            );
+            context.SaveChanges();  // Guardar los productos en la base de datos
+        }
+    }
 }
 
 // Configurar el pipeline de solicitud HTTP.

@@ -14,6 +14,7 @@ var builder = Host.CreateApplicationBuilder(args);
 // 2. Limpiar los providers de logging predeterminados
 builder.Logging.ClearProviders();
 
+await Task.Delay(30000);
 // 3. Usar sólo Serilog
 builder.Logging.AddSerilog(Log.Logger);
 builder.Services.ConfigureMassTransitConsumers();
@@ -36,7 +37,13 @@ try
         context.Database.EnsureCreated();  // Aplica las migraciones de la base de datos
     }
 }
-finally
+catch (Exception)
 {
+    await Task.Delay(60000);
+    using (var scope = host.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<NotificationContext>();
+        context.Database.EnsureCreated();  // Aplica las migraciones de la base de datos
+    }
 }
 host.Run();

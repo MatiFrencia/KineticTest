@@ -6,7 +6,7 @@ Ejecutar directamente con visual studio:
 1. Hacer un git clone: git clone https://github.com/MatiFrencia/KineticTest.git
 2. Abrir el archivo "KineticTest.sln"
 3. Seleccionar como Proyecto de Inicio el docker-compose
-4. Darle Play y esperar 1 minuto.
+4. Darle Play y esperar 1 minuto o más hasta que termine de descargar las imagenes y buildear todo.
 5. Para ver el swagger: poner en el navegador "https://localhost:5001/swagger/index.html" 
 6. Listo!
 
