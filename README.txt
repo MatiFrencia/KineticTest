@@ -19,6 +19,8 @@ Ejecutar directamente con Docker-Compose:
 5. Para ver el swagger: poner en el navegador "https://localhost:5001/swagger/index.html" 
 6. Listo!
 
+
+
 PD: Deje el handler de CreateProductEvent de Notification.Service con un throw Exception, para que rompa y puedan testear lo del CircuitBreaker y el manejo de resiliencia,
 los eventos que dan error se guardan en una tabla y los que funcionaron correctamente en otra. Si envían muchas peticiones de CreateProductEvent, van a poder visualizar
 el comportamiento haciendo un select de esas dos tablas:
@@ -27,3 +29,7 @@ SELECT * FROM [NotificationDB].[dbo].[FailedEventLogs]
 SELECT * FROM [NotificationDB].[dbo].[EventLogs]
 
 Van a poder visualizar como deja de logear los FailedEvent ya que el circuito se abre y apenas vuelve a cerrarse los sigue logeando.
+
+
+Espero sea lo que esperaban!!
+Saludos!!
