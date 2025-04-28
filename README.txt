@@ -33,6 +33,7 @@ Para conectarse a la DB los datos son
 Server: localhost,1434
 Usuario: sa
 Password: MatiFrencia11
+Setear el check "Confiar en certificado del servidor"
 
 
 Van a poder visualizar como deja de logear los FailedEvent ya que el circuito se abre y apenas vuelve a cerrarse los sigue logeando.
