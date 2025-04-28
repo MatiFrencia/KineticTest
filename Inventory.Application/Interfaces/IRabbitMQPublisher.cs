@@ -2,6 +2,6 @@
 {
     public interface IRabbitMQPublisher
     {
-        public Task PublishAsync<T>(T message) where T : class;
+        public Task PublishEvent<TEvent>(TEvent eventMessage) where TEvent : class;
     }
 }

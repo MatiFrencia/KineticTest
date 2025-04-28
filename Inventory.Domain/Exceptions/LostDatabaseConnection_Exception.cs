@@ -1,4 +1,4 @@
-﻿namespace Inventory.Domain.Exceptions.Repository
+﻿namespace Inventory.Domain.Exceptions
 {
     public class LostDatabaseConnection_Exception(string entityName) : Exception($"{entityName}_cannot_connect_database")
     {

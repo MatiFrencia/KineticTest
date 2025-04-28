@@ -1,15 +1,15 @@
 using Serilog;
-using MassTransit;
 using Inventory.Application.Interfaces;
-using Inventory.Infrastructure.Messaging;
-using Inventory.Domain.Middlewares;
 using Inventory.Application.Services;
 using Inventory.Infrastructure.Repositories;
 using Inventory.Domain.Interfaces;
 using Inventory.Infrastructure.Data;  // Agregar espacio de nombres para el contexto de EF
 using Microsoft.EntityFrameworkCore; // Necesario para la configuración de EF
 using Inventory.Domain.Models.Entities;
-using Inventory.Application.Mappings; // Asegúrate de agregar esto para acceder a tus entidades de productos
+using Inventory.Application.Mappings;
+using Inventory.Infrastructure.RabbitMQ;
+using Inventory.Infrastructure.Middlewares;
+using Inventory.API.Configs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,24 +19,14 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 // Usar Serilog en el sistema de logging global
-builder.Logging.AddSerilog();
+builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();  // Registrar el acceso al contexto HTTP
 
 // Configuración de MassTransit con RabbitMQ
-builder.Services.AddMassTransit(x =>
-{
-    // Configuración de RabbitMQ
-    x.UsingRabbitMq((context, cfg) =>
-    {
-        cfg.Host("rabbitmq", h =>
-        {
-            h.Username("guest");
-            h.Password("guest");
-        });
-    });
-});
+builder.Services.ConfigureMassTransit();
 
 // Registrar el publisher en el contenedor DI
 builder.Services.AddScoped<IRabbitMQPublisher, RabbitMQPublisher>();
@@ -88,6 +78,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.UseMiddleware<ExceptionLoggingMiddleware>();
+app.UseMiddleware<TraceIdMiddleware>();
 
 // Iniciar la aplicación
 app.Run();

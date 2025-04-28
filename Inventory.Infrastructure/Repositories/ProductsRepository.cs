@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using AutoMapper;
+using Inventory.Domain.Exceptions;
 using Inventory.Domain.Exceptions.Repository;
 using Inventory.Domain.Interfaces;
 using Inventory.Domain.Models.Entities;

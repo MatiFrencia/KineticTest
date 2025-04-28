@@ -39,7 +39,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - RABBITMQ_HOST=rabbitmq
-      - SQLSERVER_CONNECTIONSTRING=Server=sqlserver;Database=NotificationDB;User=sa;Password=MatiFrencia11;
+      - SQLSERVER_CONNECTIONSTRING=Server=sqlserver;Database=NotificationDB;User=sa;Password=MatiFrencia11;TrustServerCertificate=True;
     depends_on:
       - rabbitmq
       - sqlserver

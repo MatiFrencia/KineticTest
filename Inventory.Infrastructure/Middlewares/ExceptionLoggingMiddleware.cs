@@ -1,8 +1,9 @@
-﻿using Inventory.Domain.Exceptions.Repository;
+﻿using Inventory.Domain.Exceptions;
+using Inventory.Domain.Exceptions.Repository;
 using Microsoft.AspNetCore.Http;
 using Serilog;  // Asegúrate de agregar el espacio de nombres de Serilog
 
-namespace Inventory.Domain.Middlewares
+namespace Inventory.Infrastructure.Middlewares
 {
     public class ExceptionLoggingMiddleware
     {
