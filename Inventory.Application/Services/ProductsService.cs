@@ -6,7 +6,7 @@ using Inventory.Domain.Models.Entities;
 
 namespace Inventory.Application.Services
 {
-    class ProductsService : IProductsService
+    public class ProductsService : IProductsService
     {
         private readonly IProductsRepository _productRepository;
         private readonly IMapper _mapper;

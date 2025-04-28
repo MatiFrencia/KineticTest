@@ -19,20 +19,25 @@ namespace Inventory.Infrastructure.Data
 #if DEBUG
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            var connString = "Data Source=/data/inventory.db"; // Ruta de la base de datos SQLite
-            optionsBuilder.UseSqlite(connString);
+            var connString = Environment.GetEnvironmentVariable("SQLSERVER_CONNECTIONSTRING");
+            if (string.IsNullOrEmpty(connString))
+            {
+                // En caso de que no esté configurado, usar la ruta por defecto
+                connString = "Server=sqlserver;Database=InventoryDB;User=sa;Password=MatiFrencia11;TrustServerCertificate=True;";
+            }
+            optionsBuilder.UseSqlServer(connString);
         }
 #else
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             // Usamos la variable de entorno definida en docker-compose para obtener la ruta
-            var connString = Environment.GetEnvironmentVariable("SQLITE_DB_PATH");
+            var connString = Environment.GetEnvironmentVariable("SQLSERVER_CONNECTIONSTRING");
             if (string.IsNullOrEmpty(connString))
             {
                 // En caso de que no esté configurado, usar la ruta por defecto
-                connString = "Data Source=/data/inventory.db";
+                connString = "Server=sqlserver;Database=InventoryDB;User=sa;Password=MatiFrencia11;TrustServerCertificate=True;";
             }
-            optionsBuilder.UseSqlite(connString);
+            optionsBuilder.UseSqlServer(connString);
         }
 #endif
     }

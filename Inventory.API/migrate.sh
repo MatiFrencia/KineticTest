@@ -6,6 +6,16 @@ while ! nc -z rabbitmq 5672; do
   sleep 1
 done
 
+# Espera a que SQLServer esté disponible
+while ! nc -z sqlserver 1433; do
+  echo "Esperando SQLServer..."
+  sleep 1
+done
+
+# Elimina la base de datos si ya existe
+echo "Eliminando la base de datos de Inventory API..."
+dotnet ef database drop --project Inventory.Infrastructure --force
+
 # Ejecuta la migración para la base de datos SQLite de Inventory
 echo "Ejecutando migraciones de Inventory API..."
 dotnet ef database update --project Inventory.Infrastructure

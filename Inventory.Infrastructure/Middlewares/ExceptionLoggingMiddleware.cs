@@ -1,18 +1,16 @@
 ﻿using Inventory.Domain.Exceptions.Repository;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
+using Serilog;  // Asegúrate de agregar el espacio de nombres de Serilog
 
 namespace Inventory.Domain.Middlewares
 {
     public class ExceptionLoggingMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly ILogger<ExceptionLoggingMiddleware> _logger;
 
-        public ExceptionLoggingMiddleware(RequestDelegate next, ILogger<ExceptionLoggingMiddleware> logger)
+        public ExceptionLoggingMiddleware(RequestDelegate next)
         {
             _next = next;
-            _logger = logger;
         }
 
         public async Task Invoke(HttpContext context)
@@ -24,7 +22,7 @@ namespace Inventory.Domain.Middlewares
             catch (Exception ex)
             {
                 LogException(ex);
-                throw; // rethrow to preserve behavior
+                throw; // Re-throws the exception to preserve the original behavior
             }
         }
 
@@ -40,14 +38,15 @@ namespace Inventory.Domain.Middlewares
                 string value = (string)ex.GetType().GetProperty("Value")?.GetValue(ex) ?? "unknown_value";
                 string innerMessage = ex.InnerException?.Message ?? "none";
 
-                _logger.LogError(ex, "Custom Exception Caught | Entity: {EntityName} | Value: {Value} | Inner: {InnerExceptionMessage}",
+                // Usando Serilog para loguear la excepción
+                Log.Error(ex, "Custom Exception Caught | Entity: {EntityName} | Value: {Value} | Inner: {InnerExceptionMessage}",
                     entityName, value, innerMessage);
             }
             else
             {
-                _logger.LogError(ex, "Unhandled Exception Caught");
+                // Usando Serilog para loguear excepciones no manejadas
+                Log.Error(ex, "Unhandled Exception Caught");
             }
         }
     }
-
 }

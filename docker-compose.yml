@@ -8,13 +8,12 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - RABBITMQ_HOST=rabbitmq
-      - SQLITE_DB_PATH=/data/inventory.db # Agregar ruta de la base de datos
+      - SQLSERVER_CONNECTIONSTRING=Server=sqlserver;Database=InventoryDB;User=sa;Password=MatiFrencia11;TrustServerCertificate=True;
     depends_on:
       - rabbitmq
+      - sqlserver 
     ports:
       - "5000:8080"
-    volumes:
-      - inventory_db:/data # Volumen persistente para la base de datos
     networks:
       - app_network
     entrypoint: ["/bin/bash", "/app/migrate.sh"]
@@ -40,18 +39,29 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - RABBITMQ_HOST=rabbitmq
-      - SQLITE_DB_PATH=/data/notification.db # Agregar ruta de la base de datos
+      - SQLSERVER_CONNECTIONSTRING=Server=sqlserver;Database=NotificationDB;User=sa;Password=MatiFrencia11;
     depends_on:
       - rabbitmq
-    volumes:
-      - notification_db:/data # Volumen persistente para la base de datos
+      - sqlserver
     networks:
       - app_network
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=MatiFrencia11
+    ports:
+      - "1434:1433"
+    networks:
+      - app_network
+    volumes:
+      - sqlserver_data:/var/opt/mssql 
 
 networks:
   app_network:
     driver: bridge
 
 volumes:
-  inventory_db: # Volumen para la base de datos de Inventory.API
-  notification_db: # Volumen para la base de datos de Notification.Service
+  sqlserver_data:
