@@ -24,7 +24,6 @@ namespace Notification.Service.RabbitMQ.Handlers.Products
             _logger.Information("Handling event: {EventType} | EventId: {EventId} | ProductId: {ProductId} | TraceId: {TraceId}",
             message.EventType, message.EventId, message.ProductId, message.TraceId);
             //Send email Notification
-            throw new Exception("");
             await Task.CompletedTask;
         }
     }

@@ -1,6 +1,7 @@
 ﻿using MassTransit;
 using Notification.Service.Middleware;
 using Notification.Service.RabbitMQ.Handlers.Products;
+using Polly;
 
 namespace Notification.Service.Configs
 {
@@ -20,21 +21,32 @@ namespace Notification.Service.Configs
                         h.Username("guest");
                         h.Password("guest");
                     });
+
                     cfg.UseConsumeFilter(typeof(EventLoggingMiddleware<>), context);
+
+
 
                     cfg.ReceiveEndpoint("product_created_queue", e =>
                     {
-                        // Asociar la cola al exchange y configurar el enrutamiento
                         e.Bind("inventory_exchange", s =>
                         {
-                            s.RoutingKey = "product_created"; // Clave de enrutamiento para el mensaje
-                            s.ExchangeType = "direct"; // Tipo de exchange directo
+                            s.RoutingKey = "product_created";
+                            s.ExchangeType = "direct";
                         });
+
                         e.Consumer<ProductCreatedEventHandler>();
-                        // Configuración de Dead Letter Queue (DLQ)
-                        e.UseMessageRetry(r => r.Immediate(3)); // 3 reintentos antes de pasar a la DLQ
-                        e.UseDelayedRedelivery(r => r.Intervals(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10))); // Retrasos entre los reintentos
-                                                                                                                     // Configurar Dead Letter Queue (DLQ) con MassTransit
+
+                        e.UseMessageRetry(r => r.Immediate(3));
+                        e.UseDelayedRedelivery(r => r.Intervals(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10)));
+
+                        e.UseCircuitBreaker(cb =>
+                        {
+                            cb.TrackingPeriod = TimeSpan.FromMinutes(15);
+                            cb.TripThreshold = 1; // 15% de fallas
+                            cb.ActiveThreshold = 1; // Mínimo 10 intentos antes de evaluar
+                            cb.ResetInterval = TimeSpan.FromSeconds(20);
+                        });
+
                         e.BindDeadLetterQueue("inventory_exchange_failed", "failed_product_created_queue", dlq =>
                         {
                             dlq.ExchangeType = "direct";
@@ -43,17 +55,23 @@ namespace Notification.Service.Configs
 
                     cfg.ReceiveEndpoint("product_updated_queue", e =>
                     {
-                        // Asociar la cola al exchange y configurar el enrutamiento
                         e.Bind("inventory_exchange", s =>
                         {
-                            s.RoutingKey = "product_updated"; // Clave de enrutamiento para el mensaje
-                            s.ExchangeType = "direct"; // Tipo de exchange directo
+                            s.RoutingKey = "product_updated";
+                            s.ExchangeType = "direct";
                         });
                         e.Consumer<ProductUpdatedEventHandler>();
-                        // Configuración de Dead Letter Queue (DLQ)
-                        e.UseMessageRetry(r => r.Immediate(3)); // 3 reintentos antes de pasar a la DLQ
-                        e.UseDelayedRedelivery(r => r.Intervals(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10))); // Retrasos entre los reintentos
-                                                                                                                     // Configurar Dead Letter Queue (DLQ) con MassTransit
+
+                        e.UseMessageRetry(r => r.Immediate(3));
+                        e.UseDelayedRedelivery(r => r.Intervals(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10)));
+
+                        e.UseCircuitBreaker(cb =>
+                        {
+                            cb.TrackingPeriod = TimeSpan.FromMinutes(15);
+                            cb.TripThreshold = 1; // 15% de fallas
+                            cb.ActiveThreshold = 1; // Mínimo 10 intentos antes de evaluar
+                            cb.ResetInterval = TimeSpan.FromSeconds(20);
+                        });
                         e.BindDeadLetterQueue("inventory_exchange_failed", "failed_product_updated_queue", dlq =>
                         {
                             dlq.ExchangeType = "direct";
@@ -62,23 +80,28 @@ namespace Notification.Service.Configs
 
                     cfg.ReceiveEndpoint("product_deleted_queue", e =>
                     {
-                        // Asociar la cola al exchange y configurar el enrutamiento
                         e.Bind("inventory_exchange", s =>
                         {
-                            s.RoutingKey = "product_deleted"; // Clave de enrutamiento para el mensaje
-                            s.ExchangeType = "direct"; // Tipo de exchange directo
+                            s.RoutingKey = "product_deleted";
+                            s.ExchangeType = "direct";
                         });
                         e.Consumer<ProductDeletedEventHandler>();
-                        // Configuración de Dead Letter Queue (DLQ)
-                        e.UseMessageRetry(r => r.Immediate(3)); // 3 reintentos antes de pasar a la DLQ
-                        e.UseDelayedRedelivery(r => r.Intervals(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10))); // Retrasos entre los reintentos
-                                                                                                                     // Configurar Dead Letter Queue (DLQ) con MassTransit
+
+                        e.UseMessageRetry(r => r.Immediate(3));
+                        e.UseDelayedRedelivery(r => r.Intervals(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10)));
+
+                        e.UseCircuitBreaker(cb =>
+                        {
+                            cb.TrackingPeriod = TimeSpan.FromMinutes(15);
+                            cb.TripThreshold = 2; // 15% de fallas
+                            cb.ActiveThreshold = 1; // Mínimo 10 intentos antes de evaluar
+                            cb.ResetInterval = TimeSpan.FromSeconds(20);
+                        });
                         e.BindDeadLetterQueue("inventory_exchange_failed", "failed_product_deleted_queue", dlq =>
                         {
                             dlq.ExchangeType = "direct";
                         });
                     });
-
                 });
             });
         }

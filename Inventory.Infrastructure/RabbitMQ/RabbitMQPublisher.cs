@@ -81,7 +81,7 @@ namespace Inventory.Infrastructure.RabbitMQ
                 eventBase.TraceId = traceId;
             }
 
-            await PublishAsync(eventMessage, routingKey);
+            _ = PublishAsync(eventMessage, routingKey);
         }
     }
 }
